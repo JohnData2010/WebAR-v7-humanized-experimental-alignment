@@ -1,0 +1,8 @@
+node_modules/
+.cursor/
+
+# Logs / local tooling
+*.log
+.DS_Store
+
+.vercel

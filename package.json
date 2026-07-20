@@ -1,0 +1,6 @@
+{
+  "name": "ar-demo-code",
+  "private": true,
+  "type": "module",
+  "description": "Static AR face-filter prototype for Qualtrics (modules load via CDN; no npm build)."
+}

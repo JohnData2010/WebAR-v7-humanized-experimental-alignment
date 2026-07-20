@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AR Demo postMessage Test Harness</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        margin: 0;
+        padding: max(12px, env(safe-area-inset-top, 0px))
+          max(12px, env(safe-area-inset-right, 0px))
+          max(12px, env(safe-area-inset-bottom, 0px))
+          max(12px, env(safe-area-inset-left, 0px));
+        background: #020617;
+        color: #e5e7eb;
+        font-size: 16px;
+        line-height: 1.5;
+      }
+      h1 {
+        font-size: clamp(20px, 2.2vw + 0.8rem, 22px);
+        line-height: 1.25;
+        margin-bottom: 4px;
+      }
+      .log,
+      .expect-panel,
+      .audit-panel {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: #0f172a;
+        border: 1px solid #334155;
+        font-size: 13px;
+        line-height: 1.5;
+        max-width: 560px;
+        color: #cbd5e1;
+        white-space: pre-wrap;
+      }
+      .log {
+        max-height: 320px;
+        overflow: auto;
+        background: #0b1120;
+      }
+      iframe {
+        width: 100%;
+        max-width: 480px;
+        height: min(90vh, 820px);
+        min-height: 480px;
+        border-radius: 16px;
+        border: 1px solid #1f2937;
+        overflow: hidden;
+      }
+      label {
+        font-size: 15px;
+        display: block;
+        margin-bottom: 6px;
+      }
+      select,
+      button {
+        font-size: 16px;
+        min-height: 44px;
+      }
+      select {
+        padding: 7px 8px;
+        border-radius: 4px;
+        border: 1px solid #4b5563;
+        background: #020617;
+        color: #e5e7eb;
+        min-width: 200px;
+      }
+      button {
+        margin-left: 6px;
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: 1px solid #4f46e5;
+        background: #4f46e5;
+        color: white;
+        cursor: pointer;
+      }
+      .meta {
+        font-size: 14px;
+        color: #9ca3af;
+        margin-bottom: 8px;
+      }
+      .ok {
+        color: #4ade80;
+      }
+      .bad {
+        color: #fb923c;
+      }
+      code {
+        color: #a5f3fc;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>AR Demo postMessage Test Harness</h1>
+    <p class="meta">
+      Pick a <code>cid</code>, reload the iframe, then verify the rendered notice,
+      permission list, and <code>AR_PROTO_AUDIT</code> / <code>AR_PROTO_COMPLETE</code>.
+    </p>
+
+    <div style="margin-bottom: 10px;">
+      <label>
+        Condition (<code>cid</code>):
+        <select id="cidSelect" aria-label="Condition cid"></select>
+        <button id="reloadBtn" type="button">Reload iframe</button>
+      </label>
+    </div>
+
+    <iframe
+      id="demoFrame"
+      src="./index.html?debug=1&amp;cid=M1_C1"
+      title="AR Demo"
+      allow="camera; microphone"
+    ></iframe>
+
+    <div class="expect-panel" id="expectPanel"></div>
+    <div class="audit-panel" id="auditPanel" aria-live="polite">
+      Waiting for <code>AR_PROTO_AUDIT</code>...
+    </div>
+    <div class="log" id="log"></div>
+
+    <script>
+      const CIDS = []
+        .concat(
+          ["M1_C1", "M1_C2", "M1_C3", "M1_C4", "M1_C5", "M1_C6", "M1_C7", "M1_C8"]
+        )
+        .concat(
+          ["M2_C1", "M2_C2", "M2_C3", "M2_C4", "M2_C5", "M2_C6", "M2_C7", "M2_C8"]
+        );
+
+      const BUNDLES = {
+        D1: {
+          access_profile: "camera_only",
+          required_permissions: ["camera"],
+        },
+        D2: {
+          access_profile: "camera_microphone",
+          required_permissions: ["camera", "microphone"],
+        },
+        D3: {
+          access_profile: "camera_photo_library",
+          required_permissions: ["camera", "photos"],
+        },
+        D4: {
+          access_profile: "camera_microphone_photo_library",
+          required_permissions: ["camera", "microphone", "photos"],
+        },
+      };
+
+      const cidSelect = document.getElementById("cidSelect");
+      CIDS.forEach((cid) => {
+        const opt = document.createElement("option");
+        opt.value = cid;
+        opt.textContent = cid;
+        cidSelect.appendChild(opt);
+      });
+      cidSelect.value = "M1_C1";
+
+      const logEl = document.getElementById("log");
+      function appendLog(msg) {
+        const now = new Date().toISOString();
+        logEl.textContent += "[" + now + "] " + msg + "\n";
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;");
+      }
+
+      function expectedFromCid(cid) {
+        const m = cid && cid.match(/^M(\d)_C(\d+)$/);
+        if (!m) return null;
+
+        const mod = m[1];
+        const cNum = parseInt(m[2], 10);
+        const bundleKey = "D" + Math.ceil(cNum / 2);
+        const bundle = BUNDLES[bundleKey];
+
+        if (mod === "1") {
+          return {
+            condition_id: cid,
+            policy_module: "sharing",
+            policy_condition:
+              cNum % 2 === 1 ? "internal_only" : "external_sharing",
+            bundleKey,
+            access_profile: bundle.access_profile,
+            required_permissions: bundle.required_permissions,
+          };
+        }
+
+        return {
+          condition_id: cid,
+          policy_module: "retention",
+          policy_condition:
+            cNum % 2 === 1
+              ? "immediate_delete"
+              : "retain_up_to_3_years",
+          bundleKey,
+          access_profile: bundle.access_profile,
+          required_permissions: bundle.required_permissions,
+        };
+      }
+
+      function arraysEqual(a, b) {
+        return JSON.stringify(a || []) === JSON.stringify(b || []);
+      }
+
+      function renderExpected(cid) {
+        const exp = expectedFromCid(cid);
+        if (!exp) return "<p>Invalid cid.</p>";
+
+        return (
+          "<strong>Expected active stimulus</strong><ul>" +
+          "<li>condition_id: <code>" + escapeHtml(exp.condition_id) + "</code></li>" +
+          "<li>policy_module: <code>" + escapeHtml(exp.policy_module) + "</code></li>" +
+          "<li>policy_condition: <code>" + escapeHtml(exp.policy_condition) + "</code></li>" +
+          "<li>access_bundle: <code>" + escapeHtml(exp.bundleKey) + "</code></li>" +
+          "<li>access_profile: <code>" + escapeHtml(exp.access_profile) + "</code></li>" +
+          "<li>required_permissions: <code>" +
+          escapeHtml(JSON.stringify(exp.required_permissions)) +
+          "</code></li>" +
+          "<li>media_mode: <code>demo_video_preview</code></li>" +
+          "</ul>"
+        );
+      }
+
+      function renderAuditChecks(payload) {
+        const selected = cidSelect.value || "M1_C1";
+        const exp = expectedFromCid(selected);
+        const panel = document.getElementById("auditPanel");
+        if (!exp || !panel) return;
+
+        const rows = [
+          ["condition_id equals harness selection", String(payload.condition_id) === selected],
+          ["policy_module", payload.policy_module === exp.policy_module],
+          ["policy_condition", payload.policy_condition === exp.policy_condition],
+          ["access_bundle", payload.access_bundle === exp.bundleKey],
+          ["access_profile", payload.access_profile === exp.access_profile],
+          [
+            "required_permissions",
+            arraysEqual(payload.required_permissions, exp.required_permissions),
+          ],
+          ["media_mode", payload.media_mode === "demo_video_preview"],
+        ];
+
+        panel.innerHTML =
+          "<strong>Last AR_PROTO_AUDIT vs harness rules</strong><ul>" +
+          rows
+            .map(
+              ([label, ok]) =>
+                "<li><span class=\"" +
+                (ok ? "ok" : "bad") +
+                "\">" +
+                (ok ? "PASS" : "CHECK") +
+                "</span> " +
+                escapeHtml(label) +
+                "</li>"
+            )
+            .join("") +
+          "</ul>";
+      }
+
+      window.addEventListener("message", (event) => {
+        const d = event.data;
+        if (!d || typeof d.type !== "string") return;
+        if (
+          d.type === "AR_PROTO_READY" ||
+          d.type === "AR_PROTO_COMPLETE" ||
+          d.type === "AR_PROTO_AUDIT" ||
+          d.type === "AR_PROTO_ERROR"
+        ) {
+          appendLog(d.type + ": " + JSON.stringify(d));
+        }
+        if (d.type === "AR_PROTO_READY") {
+          const targetOrigin =
+            event.origin && event.origin !== "null" ? event.origin : "*";
+          iframe.contentWindow.postMessage(
+            { type: "AR_PROTO_REQUEST_AUDIT" },
+            targetOrigin
+          );
+        }
+        if (d.type === "AR_PROTO_AUDIT") {
+          renderAuditChecks(d.payload || {});
+        }
+      });
+
+      const iframe = document.getElementById("demoFrame");
+      const expectPanel = document.getElementById("expectPanel");
+
+      function reload() {
+        const cid = cidSelect.value || "M1_C1";
+        iframe.src = "./index.html?debug=1&cid=" + encodeURIComponent(cid);
+        expectPanel.innerHTML = renderExpected(cid);
+        document.getElementById("auditPanel").innerHTML =
+          "Waiting for <code>AR_PROTO_AUDIT</code>...";
+        appendLog("Reloaded iframe with cid=" + cid);
+      }
+
+      document.getElementById("reloadBtn").addEventListener("click", reload);
+      cidSelect.addEventListener("change", reload);
+      reload();
+    </script>
+  </body>
+</html>
