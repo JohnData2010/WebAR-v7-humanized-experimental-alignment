@@ -53,13 +53,20 @@ public/src/telemetryConfig.js
 The hosted QA deployment currently allows:
 
 ```javascript
-allowedProductionParentOrigins: ["https://web-ar-version-21.vercel.app"]
+allowedProductionParentOrigins: [
+  "https://web-ar-version-21.vercel.app",
+  "https://researchsurveys.deakin.edu.au"
+]
 ```
 
-Before embedding in Qualtrics, add the exact Qualtrics or approved custom-domain parent origin:
+If the survey moves to a different Qualtrics/custom-domain parent origin, add that exact origin:
 
 ```javascript
-allowedProductionParentOrigins: ["https://YOUR_QUALTRICS_OR_CUSTOM_DOMAIN"]
+allowedProductionParentOrigins: [
+  "https://web-ar-version-21.vercel.app",
+  "https://researchsurveys.deakin.edu.au",
+  "https://YOUR_OTHER_QUALTRICS_OR_CUSTOM_DOMAIN"
+]
 ```
 
 Do not use participant recruitment until the QSF, listener, manifest, Vercel deployment, MP4, and 16-cell export QA have passed.

@@ -14,7 +14,10 @@ export const TELEMETRY_CONFIG = Object.freeze({
   videoAssetId: "ar_face_filter_preview_v1",
   // Hosted QA parent. Add the exact Qualtrics/custom-domain origin before
   // embedding the stimulus in a survey.
-  allowedProductionParentOrigins: ["https://web-ar-version-21.vercel.app"],
+  allowedProductionParentOrigins: [
+    "https://web-ar-version-21.vercel.app",
+    "https://researchsurveys.deakin.edu.au",
+  ],
 });
 
 export const EVENT_TYPES = Object.freeze({

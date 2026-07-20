@@ -18,7 +18,7 @@ The active WebAR source under `public/` has been updated from the v6 contract to
 - Introduction, permission summary, permission prompts, demo status, error copy, and completion copy have been humanized.
 - The neutral navigation label `Continue` is used instead of agreement-like wording.
 - Access Scope and 30-day retention wording remain absent from active source.
-- Production `postMessage` is restricted to configured trusted parent origins. The hosted QA Vercel parent origin is allowed; the exact Qualtrics/custom-domain origin still needs to be added before survey embedding.
+- Production `postMessage` is restricted to configured trusted parent origins. The hosted QA Vercel parent origin and Deakin Qualtrics origin `https://researchsurveys.deakin.edu.au` are allowed.
 
 ## Files changed
 
@@ -46,7 +46,7 @@ The previous active files are retained in `archive/stimulus_pre_v7_2026-07-17/`.
 
 ## Required before a hosted Qualtrics test
 
-1. Add the exact Qualtrics or approved custom-domain origin in `TELEMETRY_CONFIG.allowedProductionParentOrigins`.
+1. If the survey moves to a different Qualtrics/custom-domain origin, add that exact parent origin in `TELEMETRY_CONFIG.allowedProductionParentOrigins`.
 2. Update the Qualtrics listener, Embedded Data manifest, expected metadata, assignment fields, manipulation-check keys, and QSF to the v7 canonical values.
 3. Supply the actual production QSF, listener, manifest, deployed URL/origin, test harness/deployment configuration, and MP4 for an end-to-end 16-cell audit.
 4. Implement completion acknowledgement/retry only as a coordinated WebAR and listener change.
