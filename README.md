@@ -44,13 +44,19 @@ Routes are configured in `vercel.json`:
 
 ## Important Deployment Gate
 
-Production `postMessage` is intentionally fail-closed until the Qualtrics or approved custom-domain parent origin is configured in:
+Production `postMessage` is restricted to approved parent origins configured in:
 
 ```text
 public/src/telemetryConfig.js
 ```
 
-Set:
+The hosted QA deployment currently allows:
+
+```javascript
+allowedProductionParentOrigins: ["https://web-ar-version-21.vercel.app"]
+```
+
+Before embedding in Qualtrics, add the exact Qualtrics or approved custom-domain parent origin:
 
 ```javascript
 allowedProductionParentOrigins: ["https://YOUR_QUALTRICS_OR_CUSTOM_DOMAIN"]

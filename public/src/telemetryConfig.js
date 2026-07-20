@@ -12,9 +12,9 @@ export const TELEMETRY_CONFIG = Object.freeze({
   screenOrderVersion: SCREEN_ORDER_VERSION,
   mediaMode: "demo_video_preview",
   videoAssetId: "ar_face_filter_preview_v1",
-  // STOP-SHIP: populate with the exact production Qualtrics/custom-domain
-  // origin before deployment. Production now fails closed when this is empty.
-  allowedProductionParentOrigins: [],
+  // Hosted QA parent. Add the exact Qualtrics/custom-domain origin before
+  // embedding the stimulus in a survey.
+  allowedProductionParentOrigins: ["https://web-ar-version-21.vercel.app"],
 });
 
 export const EVENT_TYPES = Object.freeze({
