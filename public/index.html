@@ -45,6 +45,7 @@
         -webkit-text-size-adjust: 100%;
         text-size-adjust: 100%;
         height: 100%;
+        scrollbar-gutter: stable;
       }
 
       html,
@@ -95,6 +96,9 @@
       .app-shell {
         width: 100%;
         max-width: 420px;
+        height: min(94vh, 920px);
+        height: min(94dvh, 920px);
+        height: min(94svh, 920px);
         max-height: min(94vh, 920px);
         max-height: min(94dvh, 920px);
         max-height: min(94svh, 920px);
@@ -127,9 +131,9 @@
         -webkit-overflow-scrolling: touch;
       }
 
-      body.permission-dialog-open,
       body.permission-dialog-open .app-body {
-        overflow: hidden;
+        overflow-y: hidden;
+        scrollbar-gutter: stable;
       }
 
       /* Privacy notice replay (darker, stronger blur) */
@@ -253,6 +257,7 @@
         padding: 18px 18px 14px;
         gap: 14px;
         overflow-y: auto;
+        scrollbar-gutter: stable;
         -webkit-overflow-scrolling: touch;
       }
 
@@ -1279,6 +1284,8 @@
       @media (max-width: 480px) {
         .app-shell {
           border-radius: 24px;
+          height: min(96dvh, 920px);
+          height: min(96vh, 920px);
           max-height: min(96dvh, 920px);
           max-height: min(96vh, 920px);
         }
