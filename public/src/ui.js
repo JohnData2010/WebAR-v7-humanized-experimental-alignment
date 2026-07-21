@@ -717,6 +717,7 @@ export class AppUI {
     card.append(iconWrap, title, message, buttonsCol);
     overlay.appendChild(card);
     this.promptPreviousFocus = document.activeElement;
+    document.body.classList.add("permission-dialog-open");
     document.body.appendChild(overlay);
     card.focus({ preventScroll: true });
 
@@ -1049,6 +1050,7 @@ export class AppUI {
       this.activePromptOverlay.parentNode.removeChild(this.activePromptOverlay);
     }
     this.activePromptOverlay = null;
+    document.body.classList.remove("permission-dialog-open");
     if (this.promptPreviousFocus instanceof HTMLElement) {
       this.promptPreviousFocus.focus({ preventScroll: true });
     }
